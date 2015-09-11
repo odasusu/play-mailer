@@ -1,8 +1,8 @@
 # About
 :next-branch-uri: https://github.com/playframework/play-mailer/tree/next
-:playframework-24x-docs-uri: https://www.playframework.com/documentation/2.4.x/
-:runtime-di-uri: {playframework-24x-docs-uri}/ScalaDependencyInjection
-:compile-time-di-uri: {playframework-24x-docs-uri}/ScalaCompileTimeDependencyInjection
+:playframework-24x-docs-uri: https://www.playframework.com/documentation/2.4.x
+:runtime-di-uri: {playframework-24x-docs-uri}/ScalaDependencyInjection#Runtime-Dependency-Injection
+:compile-time-di-uri: {playframework-24x-docs-uri}/ScalaCompileTimeDependencyInjection#Compile-Time-Dependency-Injection
 
 This plugin provides a simple emailer.
 
@@ -12,7 +12,7 @@ image:https://travis-ci.org/playframework/play-mailer.svg?branch=master["Travis 
 
 ## Setup
 
-NOTE: For Play 2.3.x please read https://github.com/playframework/play-mailer/blob/2.3.x/README.md#setup[the README on the 2.3.x branch].
+NOTE: For Play 2.3.x please read https://github.com/playframework/play-mailer/blob/2.x/README.md#setup[the README on the 2.x branch].
 
  1. Add a library dependency on play-mailer:
 +
@@ -56,6 +56,7 @@ public class MyComponent {
   @Inject MailerClient mailerClient;
 
   public void sendEmail() {
+    String cid = "1234";
     Email email = new Email()
       .setSubject("Simple email")
       .setFrom("Mister FROM <from@email.com>")
@@ -64,9 +65,11 @@ public class MyComponent {
       .addAttachment("attachment.pdf", new File("/some/path/attachment.pdf"))
       // adds inline attachment from byte array
       .addAttachment("data.txt", "data".getBytes(), "text/plain", "Simple data", EmailAttachment.INLINE)
+      // adds cid attachment
+      .addAttachment("image.jpg", new File("/some/path/image.jpg"), cid)
       // sends text, HTML or both...
       .setBodyText("A text message")
-      .setBodyHtml("<html><body><p>An <b>html</b> message</p></body></html>");
+      .setBodyHtml("<html><body><p>An <b>html</b> message with cid <img src=\"cid:" + cid + "\"></p></body></html>");
     mailerClient.send(email);
   }
 }
@@ -82,6 +85,7 @@ import java.io.File
 import org.apache.commons.mail.EmailAttachment
 
 def sendEmail {
+  val cid = "1234"
   val email = Email(
     "Simple email",
     "Mister FROM <from@email.com>",
@@ -90,11 +94,13 @@ def sendEmail {
     attachments = Seq(
       AttachmentFile("attachment.pdf", new File("/some/path/attachment.pdf")),
       // adds inline attachment from byte array
-      AttachmentData("data.txt", "data".getBytes, "text/plain", Some("Simple data"), Some(EmailAttachment.INLINE))
+      AttachmentData("data.txt", "data".getBytes, "text/plain", Some("Simple data"), Some(EmailAttachment.INLINE)),
+      // adds cid attachment
+      AttachmentFile("image.jpg", new File("/some/path/image.jpg"), contentId = Some(cid))
     ),
     // sends text, HTML or both...
     bodyText = Some("A text message"),
-    bodyHtml = Some("<html><body><p>An <b>html</b> message</p></body></html>")
+    bodyHtml = Some(s"""<html><body><p>An <b>html</b> message with cid <img src="cid:$cid"></p></body></html>""")
   )
   mailerClient.send(email)
 }
